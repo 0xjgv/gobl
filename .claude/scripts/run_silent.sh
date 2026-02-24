@@ -7,8 +7,6 @@ set -e  # Exit immediately if any command fails
 # Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Check if verbose mode is enabled
@@ -71,27 +69,15 @@ run_silent_with_test_count() {
     fi
 }
 
-# Print section header
-print_header() {
-    local module="$1"
-    local description="$2"
-    printf "\n${BLUE}[%s]${NC} %s:\n" "$module" "$description"
-}
-
 # Print main section header
 print_main_header() {
     local title="$1"
     printf "\n=== %s ===\n\n" "$title"
 }
 
-# Check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
 # Install golangci-lint if needed (used by Go targets)
 ensure_golangci_lint() {
-    if ! command_exists golangci-lint; then
+    if ! command -v golangci-lint >/dev/null 2>&1; then
         echo "  Installing golangci-lint..."
         brew install golangci-lint >/dev/null 2>&1 || {
             echo "  ${RED}Failed to install golangci-lint${NC}"
@@ -99,5 +85,3 @@ ensure_golangci_lint() {
         }
     fi
 }
-
-# Removed tracking functionality - doesn't work across sub-makes
