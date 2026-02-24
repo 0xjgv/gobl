@@ -78,6 +78,10 @@ pre-commit: ## Run lint + test (for git hook)
 
 .PHONY: hooks
 hooks: ## Install git pre-commit hook
+	@if [ -f .git/hooks/pre-commit ]; then \
+		echo "⚠ .git/hooks/pre-commit already exists. Please add 'make pre-commit' manually." >&2; \
+		exit 1; \
+	fi
 	@printf '#!/bin/sh\nmake pre-commit\n' > .git/hooks/pre-commit && \
 		chmod +x .git/hooks/pre-commit && \
 		echo "✓ Installed pre-commit hook"

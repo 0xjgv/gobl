@@ -93,21 +93,10 @@ emit_section() {
 truncate_output() {
     local max_lines="$1"
     local label="${2:-entries}"
-    local lines=()
-    local count=0
-    while IFS= read -r line; do
-        count=$((count + 1))
-        if [[ $count -le $max_lines ]]; then
-            lines+=("$line")
-        fi
-    done
-    for l in "${lines[@]}"; do
-        echo "$l"
-    done
-    if [[ $count -gt $max_lines ]]; then
-        local remaining=$((count - max_lines))
-        echo "... ($remaining more $label)"
-    fi
+    awk -v max="$max_lines" -v label="$label" '
+        NR <= max { print }
+        END { if (NR > max) printf "... (%d more %s)\n", NR - max, label }
+    '
 }
 
 

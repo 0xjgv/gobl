@@ -75,13 +75,11 @@ print_main_header() {
     printf "\n=== %s ===\n\n" "$title"
 }
 
-# Install golangci-lint if needed (used by Go targets)
+# Ensure golangci-lint is available
 ensure_golangci_lint() {
     if ! command -v golangci-lint >/dev/null 2>&1; then
-        echo "  Installing golangci-lint..."
-        brew install golangci-lint >/dev/null 2>&1 || {
-            echo "  ${RED}Failed to install golangci-lint${NC}"
-            return 1
-        }
+        printf "  ${RED}✗ golangci-lint not found.${NC}\n"
+        echo "  Install: https://golangci-lint.run/usage/install/"
+        return 1
     fi
 }
