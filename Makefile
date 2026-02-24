@@ -9,17 +9,6 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "Available commands:\n"} /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@printf "\n  Set VERBOSE=1 for full command output (e.g., make test VERBOSE=1)\n"
 
-##@ Setup
-
-.PHONY: hooks
-hooks: ## Install git hooks (pre-commit + pre-push)
-	@printf '#!/bin/sh\nmake pre-commit\n' > .git/hooks/pre-commit && \
-		chmod +x .git/hooks/pre-commit && \
-		echo "✓ Installed pre-commit hook"
-	@printf '#!/bin/sh\nmake check\n' > .git/hooks/pre-push && \
-		chmod +x .git/hooks/pre-push && \
-		echo "✓ Installed pre-push hook"
-
 ##@ Development
 
 .PHONY: build
@@ -43,6 +32,20 @@ lint: ## Run golangci-lint
 .PHONY: fix
 fix: ## Run golangci-lint with --fix
 	@$(SILENT_HELPER) && ensure_golangci_lint && run_silent "Lint fix" "golangci-lint run --fix"
+
+.PHONY: check
+check: ## Run lint, test, and verify generated files are up to date
+	@$(SILENT_HELPER) && print_main_header "Running Full Check"
+	@$(MAKE) lint
+	@$(MAKE) generate
+	@$(MAKE) test
+	@$(SILENT_HELPER) && \
+		if git diff --quiet data/; then \
+			printf "  $${GREEN}✓$${NC} Generated files up to date\n"; \
+		else \
+			printf "  $${RED}✗$${NC} Generated files out of date — run 'make generate' and commit\n"; \
+			exit 1; \
+		fi
 
 ##@ Testing
 
@@ -71,16 +74,10 @@ pre-commit: ## Run lint + test (for git hook)
 	@$(MAKE) lint
 	@$(MAKE) test
 
-.PHONY: check
-check: ## Run lint, test, and verify generated files are up to date
-	@$(SILENT_HELPER) && print_main_header "Running Full Check"
-	@$(MAKE) lint
-	@$(MAKE) generate
-	@$(MAKE) test
-	@$(SILENT_HELPER) && \
-		if git diff --quiet data/; then \
-			printf "  $${GREEN}✓$${NC} Generated files up to date\n"; \
-		else \
-			printf "  $${RED}✗$${NC} Generated files out of date — run 'make generate' and commit\n"; \
-			exit 1; \
-		fi
+##@ Setup
+
+.PHONY: hooks
+hooks: ## Install git pre-commit hook
+	@printf '#!/bin/sh\nmake pre-commit\n' > .git/hooks/pre-commit && \
+		chmod +x .git/hooks/pre-commit && \
+		echo "✓ Installed pre-commit hook"
